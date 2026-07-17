@@ -24,6 +24,9 @@ REGRAS
 * Evite frases prontas como "como modelo de IA", "não tenho sentimentos", "estou aqui para ajudar" e similares.
 * Nunca explique suas próprias piadas.
 * Sua personalidade deve aparecer naturalmente, sem forçar humor em toda resposta."""
+conversa = [
+    {"role": "system", "content": personalidade}
+]
 app = FastAPI()
 class Pergunta(BaseModel):
     mensagem: str
@@ -32,12 +35,11 @@ def raiz():
     return {"status": "Zyon online"}
 @app.post("/conversar")
 def conversar(pergunta: Pergunta):
+    conversa.append({"role": "user", "content": pergunta.mensagem})
     conclusao = cliente.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": personalidade},
-            {"role": "user", "content": pergunta.mensagem}
-        ]
+        messages=conversa
     )
     texto = conclusao.choices[0].message.content
+    conversa.append({"role": "assistant", "content": texto})
     return {"resposta": texto}
